@@ -1,7 +1,9 @@
-require File.join(File.dirname(__FILE__), "namespace")
+require File.join(File.dirname(__FILE__), "..", "namespace")
 require File.join(File.dirname(__FILE__), "tag")
+require "cabin"
 
-class RPMFile::Header
+class RPM::File::Header
+  include Cabin::Inspectable
   attr_reader :tags
   attr_reader :length
 
@@ -12,8 +14,10 @@ class RPMFile::Header
   HEADER_SIGNED_TYPE = 5
   HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00"
 
-  def initialize(rpm)
-    @rpm = rpm
+  def initialize(file)
+    @file = file
+
+    @inspectables = [:@length, :@index_count, :@data_length]
     @tags = []
   end
 
@@ -34,15 +38,17 @@ class RPMFile::Header
 
     # Header always starts with HEADER_MAGIC + index_count(2bytes) +
     # data_length(2bytes)
-    data = @rpm.file.read(16).unpack("a8NN")
+    data = @file.read(16).unpack("a8NN")
     # TODO(sissel): @index_count is really a count, rename?
     @magic, @index_count, @data_length = data
     validate
+    
+    # TODO(sissel): Validate @magic
 
     entry_size = 16 # tag id, type, offset, count == 16 bytes
     @index_size = @index_count * entry_size
-    tag_data = @rpm.file.read(@index_size)
-    data = @rpm.file.read(@data_length)
+    tag_data = @file.read(@index_size)
+    data = @file.read(@data_length)
 
     #ap :data => data
 
@@ -51,7 +57,7 @@ class RPMFile::Header
       entry_data = tag_data[i * entry_size, entry_size]
       entry = entry_data.unpack("NNNN")
       entry << data
-      tag = ::RPMFile::Tag.new(*entry)
+      tag = ::RPM::File::Tag.new(*entry)
       @tags << tag
 
       #ap tag.tag => {
@@ -73,9 +79,9 @@ class RPMFile::Header
 
   def validate
     # TODO(sissel): raise real exceptions
-    if @magic != ::RPMFile::Header::HEADER_MAGIC
+    if @magic != ::RPM::File::Header::HEADER_MAGIC
       raise "Header magic did not match; got #{@magic.inspect}, " \
-            "expected #{::RPMFile::Header::HEADER_MAGIC.inspect}"
+            "expected #{::RPM::File::Header::HEADER_MAGIC.inspect}"
     end
 
     #if !(0..32).include?(@index_count)
@@ -86,4 +92,4 @@ class RPMFile::Header
       #raise "Invalid 'data_length' value #{@data_length}, expected to be in range [0..8192]"
     #end
   end # def validate
-end # class RPMFile::Header
+end # class RPM::File::Header

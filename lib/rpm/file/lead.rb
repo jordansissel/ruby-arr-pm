@@ -1,6 +1,9 @@
-require File.join(File.dirname(__FILE__), "namespace")
+require File.join(File.dirname(__FILE__), "..", "namespace")
+require "cabin"
 
-class RPMFile::Lead
+class RPM::File::Lead
+  include Cabin::Inspectable
+
   #struct rpmlead {
   attr_accessor :magic #unsigned char magic[4];
   attr_accessor :major #unsigned char major;
@@ -12,28 +15,29 @@ class RPMFile::Lead
   attr_accessor :signature_type #short signature_type;
   attr_accessor :reserved #char reserved[16];
   #}
-
+  
   attr_accessor :length
 
-  def initialize(rpm)
-    @rpm = rpm
+  def initialize(file)
+    @file = file
+    @inspectables = [:@length, :@file]
   end
 
   def type
     case @type
-    when 0
-      return :binary
-    when 1
-      return :source
-    else
-      raise "Unknown package 'type' value #{@type}"
+      when 0
+        return :binary
+      when 1
+        return :source
+      else
+        raise "Unknown package 'type' value #{@type}"
     end
   end # def type
 
   def read
     # Use 'A' here instead of 'a' to trim nulls.
     @length = 96
-    data = @rpm.file.read(@length).unpack("A4CCnnA66nnA16")
+    data = @file.read(@length).unpack("A4CCnnA66nnA16")
     @magic, @major, @minor, @type, @archnum, @name, \
       @osnum, @signature_type, @reserved = data
 
@@ -45,4 +49,4 @@ class RPMFile::Lead
              @osnum, @signature_type, @reserved ].pack("a4CCnna66nna16")
     file.write(data)
   end # def write
-end # class RPMFile::Lead
+end # class RPM::File::Lead

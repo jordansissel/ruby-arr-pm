@@ -1,6 +1,9 @@
-require File.join(File.dirname(__FILE__), "namespace")
+require File.join(File.dirname(__FILE__), "..", "namespace")
+require "cabin"
 
-class RPMFile::Tag
+class RPM::File::Tag
+  include Cabin::Inspectable
+
   attr_accessor :tag
   attr_accessor :type
   attr_accessor :offset
@@ -263,10 +266,12 @@ class RPMFile::Tag
     @count = count
 
     @data = data
+
+    @inspectables = [:@tag, :@type, :@offset, :@count, :@value]
   end # def initialize
 
   def tag
-    TAG[@tag] or @tag
+    TAG.fetch(@tag, @tag)
   end # def tag
 
   def tag_as_int
@@ -274,12 +279,11 @@ class RPMFile::Tag
   end
 
   def type
-    TYPE[@type] or @type
+    TYPE.fetch(@type, @type)
   end # def type
 
   def value
     if !@value
-      # TODO(sissel): Handle @count of string_array, int32, etc?
       case type
         when :string
           # string at offset up to first null
@@ -300,5 +304,4 @@ class RPMFile::Tag
 
     return @value
   end # def value
-end # class RPMFile::Tag
-
+end # class RPM::File::Tag

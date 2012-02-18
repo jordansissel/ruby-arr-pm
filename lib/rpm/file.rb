@@ -1,14 +1,13 @@
-require "ap"
 require File.join(File.dirname(__FILE__), "namespace")
-require File.join(File.dirname(__FILE__), "header")
-require File.join(File.dirname(__FILE__), "lead")
-require File.join(File.dirname(__FILE__), "tag")
+require File.join(File.dirname(__FILE__), "file", "header")
+require File.join(File.dirname(__FILE__), "file", "lead")
+require File.join(File.dirname(__FILE__), "file", "tag")
 
 # Much of the code here is derived from knowledge gained by reading the rpm
 # source code, but mostly it started making more sense after reading this site:
 # http://www.rpm.org/max-rpm/s1-rpm-file-format-rpm-file-format.html
 
-class RPMFile
+class RPM::File
   attr_reader :file
 
   def initialize(file)
@@ -17,14 +16,16 @@ class RPMFile
     end
     @file = file
 
-    # Make sure we're at the beginning of the file.
-    @file.seek(0, IO::SEEK_SET)
   end # def initialize
 
   public
   def lead
     if @lead.nil?
-      @lead = ::RPMFile::Lead.new(self)
+      # Make sure we're at the beginning of the file.
+      @file.seek(0, IO::SEEK_SET)
+      @lead = ::RPM::File::Lead.new(@file)
+
+      # TODO(sissel): have 'read' return number of bytes read?
       @lead.read
     end
     return @lead
@@ -41,7 +42,7 @@ class RPMFile
     end
 
     if @signature.nil?
-      @signature = ::RPMFile::Header.new(self)
+      @signature = ::RPM::File::Header.new(@file)
       @signature.read
     end
 
@@ -54,12 +55,12 @@ class RPMFile
 
     # Skip 4 bytes of nulls
     # Why? I have no idea yet.
-    if @file.read(4) != "\0\0\0\0"
-      raise "Expected 4 nulls."
-    end
+    #if @file.read(4) != "\0\0\0\0"
+      #raise "Expected 4 nulls."
+    #end
 
     if @header.nil?
-      @header = ::RPMFile::Header.new(self)
+      @header = ::RPM::File::Header.new(@file)
       @header.read
     end
     return @header
@@ -71,11 +72,13 @@ class RPMFile
     header
     if @payload.nil?
       @payload = @file.clone
-      # TODO(sissel): Why +20? I have no idea. Needs more digging. Clearly I'm missing a part
+      # TODO(sissel): Why +16? I have no idea. Needs more digging. Clearly I'm missing a part
       # of the file here.
-      @payload.seek(@lead.length + @signature.length + @header.length + 20, IO::SEEK_SET)
+      @payload.seek(@lead.length + @signature.length + @header.length, IO::SEEK_SET)
+      p :mystery => @payload.sysread(16)
+      @payload.seek(@lead.length + @signature.length + @header.length + 16, IO::SEEK_SET)
     end
 
     return @payload
   end # def payload
-end # class RPMFile
+end # class RPM::File

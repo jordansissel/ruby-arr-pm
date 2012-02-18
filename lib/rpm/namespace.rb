@@ -1,1 +1,3 @@
-class RPMFile; end
+module RPM
+  class File; end
+end
