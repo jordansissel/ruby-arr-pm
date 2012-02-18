@@ -12,7 +12,7 @@ p rpm.signature
 p rpm.header
 
 rpm.header.tags.each do |tag|
-  next unless tag.tag.to_s =~ /(require|provide)/
+  #next unless tag.tag.to_s =~ /(require|provide)/
   p tag.tag => tag.value
 end
 #rpm.header.tags[-3..-1].each do |tag|
