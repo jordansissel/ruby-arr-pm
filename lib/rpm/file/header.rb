@@ -13,6 +13,9 @@ class RPM::File::Header
 
   HEADER_SIGNED_TYPE = 5
   HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00"
+  # magic + index_count + data_length
+  HEADER_HEADER_LENGTH = HEADER_MAGIC.length + 4 + 4
+  TAG_ENTRY_SIZE = 16 # tag id, type, offset, count == 16 bytes
 
   def initialize(file)
     @file = file
@@ -34,40 +37,30 @@ class RPM::File::Header
     # header 'entries' are an
     #   int32 (tag id), int32 (tag type), int32  (offset), uint32 (count)
     #
+    #       len = sizeof(il) + sizeof(dl) + (il * sizeof(struct entryInfo_s)) + dl;
     # See rpm's header.c, the headerLoad method function for reference.
 
     # Header always starts with HEADER_MAGIC + index_count(2bytes) +
     # data_length(2bytes)
-    data = @file.read(16).unpack("a8NN")
+    data = @file.read(HEADER_HEADER_LENGTH).unpack("a8NN")
     # TODO(sissel): @index_count is really a count, rename?
     @magic, @index_count, @data_length = data
     validate
     
-    # TODO(sissel): Validate @magic
-
-    entry_size = 16 # tag id, type, offset, count == 16 bytes
-    @index_size = @index_count * entry_size
+    @index_size = @index_count * TAG_ENTRY_SIZE
     tag_data = @file.read(@index_size)
     data = @file.read(@data_length)
 
-    #ap :data => data
-
     (0 ... @index_count).each do |i|
-      offset = i * entry_size
-      entry_data = tag_data[i * entry_size, entry_size]
+      offset = i * TAG_ENTRY_SIZE
+      entry_data = tag_data[i * TAG_ENTRY_SIZE, TAG_ENTRY_SIZE]
       entry = entry_data.unpack("NNNN")
       entry << data
       tag = ::RPM::File::Tag.new(*entry)
       @tags << tag
-
-      #ap tag.tag => {
-        #:type => tag.type,
-        #:offset => tag.offset,
-        #:count => tag.count,
-        #:value => (tag.value rescue "???"),
-      #}
     end # each index
-    @length = @magic.size + @index_size + @data_length
+
+    @length = HEADER_HEADER_LENGTH + @index_size + @data_length
   end # def read
 
   def write

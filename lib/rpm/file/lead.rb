@@ -20,7 +20,7 @@ class RPM::File::Lead
 
   def initialize(file)
     @file = file
-    @inspectables = [:@length, :@file]
+    @inspectables = [:@major, :@minor, :@length, :@type, :@archnum, :@signature_type, :@reserved, :@osnum]
   end
 
   def type
