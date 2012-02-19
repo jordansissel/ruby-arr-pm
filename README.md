@@ -19,7 +19,7 @@ especially without requiring root access to get things going.
 
 It should be possible to do a read+modify+write on an RPM.
 
-### Creating an RPM
+### Creating an RPM (proposed API)
 
     rpm = RPM.new
 
@@ -43,7 +43,7 @@ It should be possible to do a read+modify+write on an RPM.
 
     rpm.write(output_file_name)
 
-### Reading an RPM
+### Reading an RPM (proposed API)
 
     rpm = RPM.read(file)
 
@@ -66,6 +66,3 @@ Maybe something like:
       # file.io could give a nice IO-like thing that let you read the file out
       # of the rpm
     end
-
-
-
