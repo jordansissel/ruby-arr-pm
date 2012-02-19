@@ -15,6 +15,10 @@ Even still, librpm has dependencies of its own. I want fpm to be able to read
 and write RPMs without requiring and endless chain of dependencies and most
 especially without requiring root access to get things going.
 
+Mainly, if I try to build librpm myself, I get this: "configure: error: missing
+required NSPR / NSS header" and I'm not the burden of dependency resolution on
+fpm users.
+
 ## API ideas
 
 It should be possible to do a read+modify+write on an RPM.
