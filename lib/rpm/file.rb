@@ -44,6 +44,11 @@ class RPM::File
     if @signature.nil?
       @signature = ::RPM::File::Header.new(@file)
       @signature.read
+
+      # signature headers are padded up to an 8-byte boundar, details here:
+      # http://rpm.org/gitweb?p=rpm.git;a=blob;f=lib/signature.c;h=63e59c00f255a538e48cbc8b0cf3b9bd4a4dbd56;hb=HEAD#l204
+      # Throw away the pad.
+      @file.read(@signature.length % 8)
     end
 
     return @signature
@@ -72,11 +77,9 @@ class RPM::File
     header
     if @payload.nil?
       @payload = @file.clone
-      # TODO(sissel): Why +16? I have no idea. Needs more digging. Clearly I'm missing a part
-      # of the file here.
-      @payload.seek(@lead.length + @signature.length + @header.length, IO::SEEK_SET)
-      p :mystery => @payload.sysread(16)
-      @payload.seek(@lead.length + @signature.length + @header.length + 16, IO::SEEK_SET)
+      # The payload starts after the lead, signature, and header. Remember the signature has an
+      # 8-byte boundary-rounding.
+      @payload.seek(@lead.length + @signature.length + @signature.length % 8 + @header.length, IO::SEEK_SET)
     end
 
     return @payload
