@@ -7,7 +7,13 @@ read and write rpms.
 
 ## Why not use librpm?
 
-It's awkward at least for what I want to do.
+The API is quite confusing in many places, poorly documented in most. I have
+reached out to some CentOS/rpm folks to see what we can do about improving that
+API.
+
+Even still, librpm has dependencies of its own. I want fpm to be able to read
+and write RPMs without requiring and endless chain of dependencies and most
+especially without requiring root access to get things going.
 
 ## API ideas
 
