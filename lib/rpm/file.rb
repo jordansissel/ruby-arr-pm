@@ -58,12 +58,6 @@ class RPM::File
   def header
     signature
 
-    # Skip 4 bytes of nulls
-    # Why? I have no idea yet.
-    #if @file.read(4) != "\0\0\0\0"
-      #raise "Expected 4 nulls."
-    #end
-
     if @header.nil?
       @header = ::RPM::File::Header.new(@file)
       @header.read

@@ -1,7 +1,8 @@
-
 require "rpm/namespace"
 
 class RPM
+  private
+
   def initialize
     #@requires = []
     #@conflicts = []
@@ -10,8 +11,23 @@ class RPM
     #@scripts = {}
   end
 
+  def requires(name, operator=nil, version=nil)
+    @requires << [name, operator, version]
+  end # def requires
+
+  def conflicts(name, operator=nil, version=nil)
+    @conflicts << [name, operator, version]
+  end
+
+  def provides(name)
+    @provides << name
+  end
+
+  def 
+
   def self.read(path_or_io)
     rpmfile = RPM::File.new(path_or_io)
+    signature = rpmfile.signature
     header = rpmfile.header
 
     header.tags.each do |tag|
@@ -37,5 +53,11 @@ class RPM
 
   # Write this RPM to an IO-like object (must respond to 'write')
   def write(io)
+    # write the lead
+    # write the signature?
+    # write the header
+    # write the payload
   end
+
+  public(:files, :requires, :conflicts, :provides, :write)
 end # class RPM
