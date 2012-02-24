@@ -1,5 +1,5 @@
 Gem::Specification.new do |spec|
-  files = %x{git ls-files}
+  files = %x{git ls-files}.split("\n")
 
   spec.name = "rpm"
   spec.version = "0.0.1"
