@@ -10,8 +10,8 @@ rpm.signature.tags.each do |tag|
 end
 
 rpm.header.tags.each do |tag|
-  next unless tag.tag.to_s =~ /(require|provide|payload)/
-  #p tag.tag => tag.value
+  #next unless tag.tag.to_s =~ /(payload|sig)/
+  p :tag => [tag.tag, tag.type, tag.count, tag.value]
 end
 
 payload = rpm.payload
