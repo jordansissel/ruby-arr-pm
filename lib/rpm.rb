@@ -23,8 +23,6 @@ class RPM
     @provides << name
   end
 
-  def 
-
   def self.read(path_or_io)
     rpmfile = RPM::File.new(path_or_io)
     signature = rpmfile.signature

@@ -18,7 +18,9 @@ class RPM::File
 
   end # def initialize
 
-  public
+  # Return the lead for this rpm
+  #
+  # This 'lead' structure is almost entirely deprecated in the RPM file format.
   def lead
     if @lead.nil?
       # Make sure we're at the beginning of the file.
@@ -31,7 +33,7 @@ class RPM::File
     return @lead
   end # def lead
 
-  public
+  # Return the signature header for this rpm
   def signature
     lead # Make sure we've parsed the lead...
 
@@ -54,7 +56,7 @@ class RPM::File
     return @signature
   end # def signature
 
-  public
+  # Return the header for this rpm.
   def header
     signature
 
@@ -63,10 +65,10 @@ class RPM::File
       @header.read
     end
     return @header
-  end
+  end # def header
 
-  # Returns a file descriptor. On first invocation, it seeks to the start of the payload
-  public
+  # Returns a file descriptor for the payload. On first invocation, it seeks to
+  # the start of the payload
   def payload
     header
     if @payload.nil?
@@ -78,4 +80,37 @@ class RPM::File
 
     return @payload
   end # def payload
+
+  # Extract this RPM to a target directory.
+  #
+  # This should have roughly the same effect as:
+  # 
+  #   % rpm2cpio blah.rpm | (cd {target}; cpio -i --make-directories)
+  def extract(target)
+    if !File.directory?(target)
+      raise Errno::ENOENT.new(target)
+    end
+
+    tags = {}
+    header.tags.each do |tag|
+      tags[tag.tag] = tag.value
+    end 
+    
+    # Extract to the 'target' path
+    #tags[:payloadcompressor] # "xz" or "gzip" or ..?
+    #tags[:payloadformat] # "cpio"
+
+    extractor = IO.popen("#{tags[:payloadcompressor]} -d | (cd #{target}; cpio -i --make-directories)", "w")
+    buffer = ""
+    buffer.force_encoding("BINARY")
+    payload_fd = payload
+    loop do
+      data = payload.read(16384, buffer)
+      break if data.nil? # eof
+      extractor.write(data)
+    end
+    extractor.close
+  end # def extract
+
+  public(:extract, :payload, :header, :lead, :signature, :initialize) 
 end # class RPM::File
