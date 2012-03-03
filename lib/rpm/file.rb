@@ -10,6 +10,10 @@ require File.join(File.dirname(__FILE__), "file", "tag")
 class RPM::File
   attr_reader :file
 
+  FLAG_LESS = (1 << 1)    #     RPMSENSE_LESS = (1 << 1),
+  FLAG_GREATER = (1 << 2) #     RPMSENSE_GREATER  = (1 << 2),
+  FLAG_EQUAL = (1 << 3)   #     RPMSENSE_EQUAL  = (1 << 3),
+
   def initialize(file)
     if file.is_a?(String)
       file = File.new(file, "r")
@@ -112,5 +116,30 @@ class RPM::File
     extractor.close
   end # def extract
 
-  public(:extract, :payload, :header, :lead, :signature, :initialize) 
+  def requires
+    tags = {}
+    header.tags.each do |tag|
+      tags[tag.tag] = tag.value
+    end
+
+    result = []
+    reqs = tags[:requirename].zip(tags[:requireflags], tags[:requireversion])
+    reqs.each do |name, flag, version|
+      result << [name, operator(flag), version]
+    end
+    return result
+  end # def requires
+
+  def operator(flag)
+    have = lambda do |mask|
+      return flag & (mask) == mask
+    end
+    return "=" if have.call(FLAG_EQUAL)
+    return "<=" if have.call(FLAG_LESS | FLAG_EQUAL)
+    return "<<" if have.call(FLAG_LESS)
+    return ">=" if have.call(FLAG_GREATER | FLAG_EQUAL)
+    return ">>" if have.call(FLAG_GREATER)
+  end # def operator
+
+  public(:extract, :payload, :header, :lead, :signature, :initialize, :requires)
 end # class RPM::File
