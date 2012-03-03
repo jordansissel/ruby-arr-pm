@@ -85,4 +85,5 @@ class RPM::File::Header
       #raise "Invalid 'data_length' value #{@data_length}, expected to be in range [0..8192]"
     #end
   end # def validate
+
 end # class RPM::File::Header
