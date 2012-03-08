@@ -44,3 +44,7 @@ publish: test-package
 .PHONY: install
 install: $(GEM)
 	gem install $(GEM)
+
+.PHONY: clean
+clean:
+	-rm -rf .yardoc $(GEM)

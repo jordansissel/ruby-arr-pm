@@ -2,4 +2,4 @@
 things:
   ruby:
     args:
-    - rpm
+    - arr-pm
