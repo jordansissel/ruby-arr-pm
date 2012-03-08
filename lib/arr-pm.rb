@@ -1,4 +1,4 @@
-require "rpm/namespace"
+require "arr-pm/namespace"
 
 class RPM
   private

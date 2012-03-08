@@ -136,9 +136,9 @@ class RPM::File
     end
     return "=" if have.call(FLAG_EQUAL)
     return "<=" if have.call(FLAG_LESS | FLAG_EQUAL)
-    return "<<" if have.call(FLAG_LESS)
+    return "<" if have.call(FLAG_LESS)
     return ">=" if have.call(FLAG_GREATER | FLAG_EQUAL)
-    return ">>" if have.call(FLAG_GREATER)
+    return ">" if have.call(FLAG_GREATER)
   end # def operator
 
   public(:extract, :payload, :header, :lead, :signature, :initialize, :requires)
