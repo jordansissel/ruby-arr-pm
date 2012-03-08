@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.description = "This library allows to you to read and write rpm " \
     "packages. Written in pure ruby because librpm is not available " \
     "on all systems"
-  spec.license = "none chosen yet"
+  spec.license = "Apache 2"
 
   spec.add_dependency "cabin", ">0" # for logging. apache 2 license
   spec.files = files
