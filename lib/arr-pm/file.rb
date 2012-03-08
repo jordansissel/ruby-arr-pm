@@ -132,12 +132,13 @@ class RPM::File
 
   def operator(flag)
     have = lambda do |mask|
-      return flag & (mask) == mask
+      return (flag & mask) == mask
     end
-    return "=" if have.call(FLAG_EQUAL)
+
     return "<=" if have.call(FLAG_LESS | FLAG_EQUAL)
-    return "<" if have.call(FLAG_LESS)
     return ">=" if have.call(FLAG_GREATER | FLAG_EQUAL)
+    return "=" if have.call(FLAG_EQUAL)
+    return "<" if have.call(FLAG_LESS)
     return ">" if have.call(FLAG_GREATER)
   end # def operator
 
