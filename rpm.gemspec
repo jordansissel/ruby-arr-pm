@@ -1,13 +1,14 @@
 Gem::Specification.new do |spec|
   files = %x{git ls-files}.split("\n")
 
-  spec.name = "rpm"
-  spec.version = "0.0.1"
-  spec.summary = "rpm"
-  spec.description = "rpm"
+  spec.name = "arr-pm"
+  spec.version = "0.0.2"
+  spec.summary = "RPM reader and writer library"
+  spec.description = "This library allows to you to read and write rpm " \
+    "packages. Written in pure ruby because librpm is not available " \
+    "on all systems"
   spec.license = "none chosen yet"
 
-  # Note: You should set the version explicitly.
   spec.add_dependency "cabin", ">0" # for logging. apache 2 license
   spec.files = files
   spec.require_paths << "lib"
