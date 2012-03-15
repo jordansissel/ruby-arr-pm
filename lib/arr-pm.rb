@@ -1,5 +1,9 @@
 require "arr-pm/namespace"
+require "arr-pm/file"
 
+# This class is not yet complete, it is in prototype.
+#
+# Please use {RPM::File} instead
 class RPM
   private
 
