@@ -19,7 +19,6 @@ class RPM::File
       file = File.new(file, "r")
     end
     @file = file
-
   end # def initialize
 
   # Return the lead for this rpm
@@ -116,19 +115,63 @@ class RPM::File
     extractor.close
   end # def extract
 
-  def requires
-    tags = {}
-    header.tags.each do |tag|
-      tags[tag.tag] = tag.value
+  def tags
+    if @tags.nil?
+      @tags = {}
+      header.tags.each do |tag|
+        tags[tag.tag] = tag.value
+      end
     end
+    @tags
+  end # def taghash
 
-    result = []
-    reqs = tags[:requirename].zip(tags[:requireflags], tags[:requireversion])
-    reqs.each do |name, flag, version|
-      result << [name, operator(flag), version]
-    end
-    return result
+  # Get all relations of a given type to this package.
+  #
+  # Examples:
+  #
+  #     rpm.relation(:require)
+  #     rpm.relation(:conflict)
+  #     rpm.relation(:provide)
+  #
+  # In the return array-of-arrays, the elements are:
+  # [ name (string), operator (string), version (string) ]
+  #
+  # operator will be ">=", ">", "=", "<", or "<="
+  #
+  # @return Array of [name, operator, version]
+  def relation(type)
+    name = "#{type}name".to_sym
+    flags = "#{type}flags".to_sym
+    version = "#{type}version".to_sym
+    # There is no data if we are missing all 3 tag types (name/flags/version)
+    # FYI: 'tags.keys' is an array, Array#& does set intersection. 
+    return [] if (tags.keys & [name, flags, version]).size != 3
+    # Find tags <type>name, <type>flags, and <type>version, and return
+    # an array of "name operator version"
+    return tags[name].zip(tags[flags], tags[version]) \
+      .reduce([]) { |memo, (n,o,v)| memo << [n, operator(o), v] }
+  end # def relation
+
+  # Get an array of requires defined in this package.
+  #
+  # @return Array of [ [name, operator, version], ... ]
+  def requires
+    return relation(:require)
   end # def requires
+
+  # Get an array of conflicts defined in this package.
+  #
+  # @return Array of [ [name, operator, version], ... ]
+  def conflicts
+    return relation(:conflicts)
+  end # def conflicts
+
+  # Get an array of provides defined in this package.
+  #
+  # @return Array of [ [name, operator, version], ... ]
+  def provides
+    return provides(:provides)
+  end # def provides
 
   def operator(flag)
     have = lambda do |mask|
