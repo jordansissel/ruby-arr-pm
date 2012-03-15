@@ -14,6 +14,9 @@ class RPM::File
   FLAG_GREATER = (1 << 2) #     RPMSENSE_GREATER  = (1 << 2),
   FLAG_EQUAL = (1 << 3)   #     RPMSENSE_EQUAL  = (1 << 3),
 
+  # from rpm/rpmfi.h
+  FLAG_CONFIG_FILE = (1 << 0) # RPMFILE_CONFIG = (1 << 0)
+
   def initialize(file)
     if file.is_a?(String)
       file = File.new(file, "r")
@@ -78,9 +81,9 @@ class RPM::File
       @payload = @file.clone
       # The payload starts after the lead, signature, and header. Remember the signature has an
       # 8-byte boundary-rounding.
-      @payload.seek(@lead.length + @signature.length + @signature.length % 8 + @header.length, IO::SEEK_SET)
     end
 
+    @payload.seek(@lead.length + @signature.length + @signature.length % 8 + @header.length, IO::SEEK_SET)
     return @payload
   end # def payload
 
@@ -93,25 +96,17 @@ class RPM::File
     if !File.directory?(target)
       raise Errno::ENOENT.new(target)
     end
-
-    tags = {}
-    header.tags.each do |tag|
-      tags[tag.tag] = tag.value
-    end 
     
-    # Extract to the 'target' path
-    #tags[:payloadcompressor] # "xz" or "gzip" or ..?
-    #tags[:payloadformat] # "cpio"
-
-    extractor = IO.popen("#{tags[:payloadcompressor]} -d | (cd #{target}; cpio -i --make-directories)", "w")
+    extractor = IO.popen("#{tags[:payloadcompressor]} -d | (cd #{target}; cpio -i --quiet --make-directories)", "w")
     buffer = ""
     buffer.force_encoding("BINARY")
-    payload_fd = payload
+    payload_fd = payload.clone
     loop do
-      data = payload.read(16384, buffer)
+      data = payload_fd.read(16384, buffer)
       break if data.nil? # eof
       extractor.write(data)
     end
+    payload_fd.close
     extractor.close
   end # def extract
 
@@ -173,17 +168,65 @@ class RPM::File
     return provides(:provides)
   end # def provides
 
-  def operator(flag)
-    have = lambda do |mask|
-      return (flag & mask) == mask
+  # Get an array of config files
+  def config_files
+    # this stuff seems to be in the 'enum rpmfileAttrs_e' from rpm/rpmfi.h
+    results = []
+    tags[:fileflags].each_with_index do |flag, i|
+      # The :fileflags (and other :file... tags) are an array, in order of
+      # files in the rpm payload, we want a list of paths of config files.
+      results << files[i] if mask?(flag, FLAG_CONFIG_FILE)
     end
+    return results
+  end # def config_files
 
-    return "<=" if have.call(FLAG_LESS | FLAG_EQUAL)
-    return ">=" if have.call(FLAG_GREATER | FLAG_EQUAL)
-    return "=" if have.call(FLAG_EQUAL)
-    return "<" if have.call(FLAG_LESS)
-    return ">" if have.call(FLAG_GREATER)
+  # List the files in this RPM.
+  #
+  # This should have roughly the same effect as:
+  # 
+  #   % rpm2cpio blah.rpm | cpio -it
+  def files
+    return @files unless @files.nil?
+
+    lister = IO.popen("#{tags[:payloadcompressor]} -d | cpio -it --quiet", "r+")
+    buffer = ""
+    buffer.force_encoding("BINARY")
+    payload_fd = payload.clone
+    output = ""
+    loop do
+      data = payload_fd.read(16384, buffer)
+      break if data.nil? # listerextractor.write(data)
+      lister.write(data)
+
+      # Read output from the pipe.
+      begin
+        output << lister.read_nonblock(16384)
+      rescue Errno::EAGAIN
+        # do nothing
+      end
+    end
+    lister.close_write
+    # Read remaining output
+    output << lister.read
+    # Split output by newline and strip leading "."
+    @files = output.split("\n").collect { |s| s.gsub(/^\./, "") }
+    return @files
+  ensure
+    lister.close unless lister.nil?
+    payload_fd.close unless payload_fd.nil?
+  end # def files
+
+  def mask?(value, mask)
+    return (value & mask) == mask
+  end # def mask?
+
+  def operator(flag)
+    return "<=" if mask?(value, FLAG_LESS | FLAG_EQUAL)
+    return ">=" if mask?(value, FLAG_GREATER | FLAG_EQUAL)
+    return "=" if mask?(value, FLAG_EQUAL)
+    return "<" if mask?(value, FLAG_LESS)
+    return ">" if mask?(value, FLAG_GREATER)
   end # def operator
 
-  public(:extract, :payload, :header, :lead, :signature, :initialize, :requires)
+  public(:extract, :payload, :header, :lead, :signature, :initialize, :requires, :conflicts, :provides)
 end # class RPM::File
