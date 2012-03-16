@@ -158,14 +158,14 @@ class RPM::File
   #
   # @return Array of [ [name, operator, version], ... ]
   def conflicts
-    return relation(:conflicts)
+    return relation(:conflict)
   end # def conflicts
 
   # Get an array of provides defined in this package.
   #
   # @return Array of [ [name, operator, version], ... ]
   def provides
-    return provides(:provides)
+    return relation(:provide)
   end # def provides
 
   # Get an array of config files
@@ -221,11 +221,11 @@ class RPM::File
   end # def mask?
 
   def operator(flag)
-    return "<=" if mask?(value, FLAG_LESS | FLAG_EQUAL)
-    return ">=" if mask?(value, FLAG_GREATER | FLAG_EQUAL)
-    return "=" if mask?(value, FLAG_EQUAL)
-    return "<" if mask?(value, FLAG_LESS)
-    return ">" if mask?(value, FLAG_GREATER)
+    return "<=" if mask?(flag, FLAG_LESS | FLAG_EQUAL)
+    return ">=" if mask?(flag, FLAG_GREATER | FLAG_EQUAL)
+    return "=" if mask?(flag, FLAG_EQUAL)
+    return "<" if mask?(flag, FLAG_LESS)
+    return ">" if mask?(flag, FLAG_GREATER)
   end # def operator
 
   public(:extract, :payload, :header, :lead, :signature, :initialize, :requires, :conflicts, :provides)
