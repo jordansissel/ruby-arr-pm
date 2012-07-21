@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), "..", "namespace")
+require File.expand_path(File.join(File.dirname(__FILE__), "..", "namespace"))
 require File.join(File.dirname(__FILE__), "tag")
 require "cabin"
 
