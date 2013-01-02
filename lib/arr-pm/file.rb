@@ -99,7 +99,11 @@ class RPM::File
     
     extractor = IO.popen("#{tags[:payloadcompressor]} -d | (cd #{target}; cpio -i --quiet --make-directories)", "w")
     buffer = ""
-    buffer.force_encoding("BINARY")
+    begin
+        buffer.force_encoding("BINARY")
+    rescue NoMethodError
+        # Do Nothing
+    end
     payload_fd = payload.clone
     loop do
       data = payload_fd.read(16384, buffer)
@@ -190,7 +194,11 @@ class RPM::File
 
     lister = IO.popen("#{tags[:payloadcompressor]} -d | cpio -it --quiet", "r+")
     buffer = ""
-    buffer.force_encoding("BINARY")
+    begin
+        buffer.force_encoding("BINARY")
+    rescue NoMethodError
+        # Do Nothing
+    end
     payload_fd = payload.clone
     output = ""
     loop do
@@ -207,7 +215,11 @@ class RPM::File
     end
     lister.close_write
     # Read remaining output
-    output << lister.read
+    begin
+        output << lister.read
+    rescue Errno::EAGAIN
+        # Do Nothing
+    end
     # Split output by newline and strip leading "."
     @files = output.split("\n").collect { |s| s.gsub(/^\./, "") }
     return @files
