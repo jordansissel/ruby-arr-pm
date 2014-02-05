@@ -2,6 +2,7 @@ require File.join(File.dirname(__FILE__), "namespace")
 require File.join(File.dirname(__FILE__), "file", "header")
 require File.join(File.dirname(__FILE__), "file", "lead")
 require File.join(File.dirname(__FILE__), "file", "tag")
+require "fcntl"
 
 # Much of the code here is derived from knowledge gained by reading the rpm
 # source code, but mostly it started making more sense after reading this site:
@@ -214,6 +215,7 @@ class RPM::File
       end
     end
     lister.close_write
+
     # Read remaining output
     begin
       output << lister.read
@@ -225,6 +227,7 @@ class RPM::File
     rescue EOFError
       # At EOF, hurray! We're done reading.
     end
+
     # Split output by newline and strip leading "."
     @files = output.split("\n").collect { |s| s.gsub(/^\./, "") }
     return @files
