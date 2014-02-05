@@ -210,15 +210,20 @@ class RPM::File
       begin
         output << lister.read_nonblock(16384)
       rescue Errno::EAGAIN
-        # do nothing
+        # Nothing to read, move on!
       end
     end
     lister.close_write
     # Read remaining output
     begin
-        output << lister.read
+      output << lister.read
     rescue Errno::EAGAIN
-        # Do Nothing
+      # Because read_nonblock enables NONBLOCK the 'lister' fd,
+      # and we may have invoked a read *before* cpio has started
+      # writing, let's keep retrying this read until we get an EOF
+      retry
+    rescue EOFError
+      # At EOF, hurray! We're done reading.
     end
     # Split output by newline and strip leading "."
     @files = output.split("\n").collect { |s| s.gsub(/^\./, "") }
