@@ -2,7 +2,7 @@ Gem::Specification.new do |spec|
   files = %x{git ls-files}.split("\n")
 
   spec.name = "arr-pm"
-  spec.version = "0.0.8"
+  spec.version = "0.0.9"
   spec.summary = "RPM reader and writer library"
   spec.description = "This library allows to you to read and write rpm " \
     "packages. Written in pure ruby because librpm is not available " \
