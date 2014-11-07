@@ -181,7 +181,7 @@ class RPM::File
       # The :fileflags (and other :file... tags) are an array, in order of
       # files in the rpm payload, we want a list of paths of config files.
       results << files[i] if mask?(flag, FLAG_CONFIG_FILE)
-    end
+    end unless tags[:fileflags].nil? # This can be null if there is no file stored in the rpm.
     return results
   end # def config_files
 
