@@ -16,6 +16,8 @@ Gem::Specification.new do |spec|
 
   spec.authors = ["Jordan Sissel"]
   spec.email = ["jls@semicomplete.com"]
+
+  spec.add_development_dependency "flores", ">0"
   #spec.homepage = "..."
 end
 
