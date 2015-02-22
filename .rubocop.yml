@@ -68,3 +68,6 @@ Style/NumericLiterals:
 # This kind of style "useless use of %x" assumes code is write-once.
 Style/UnneededPercentX:
   Enabled: false
+
+Style/FileName:
+  Enabled: false
