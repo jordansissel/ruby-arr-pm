@@ -179,10 +179,12 @@ class RPM::File
     results = []
     # short-circuit if there's no :fileflags tag
     return results unless tags.include?(:fileflags)
-    tags[:fileflags].each_with_index do |flag, i|
-      # The :fileflags (and other :file... tags) are an array, in order of
-      # files in the rpm payload, we want a list of paths of config files.
-      results << files[i] if mask?(flag, FLAG_CONFIG_FILE)
+    if !tags[:fileflags].nil?
+      tags[:fileflags].each_with_index do |flag, i|
+        # The :fileflags (and other :file... tags) are an array, in order of
+        # files in the rpm payload, we want a list of paths of config files.
+        results << files[i] if mask?(flag, FLAG_CONFIG_FILE)
+      end
     end
     return results
   end # def config_files
