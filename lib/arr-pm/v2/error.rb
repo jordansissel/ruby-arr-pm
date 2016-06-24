@@ -12,6 +12,12 @@ module ArrPM::V2::Error
     end
   end
 
+  class InvalidHeaderMagicValue < Base
+    def initialize(value)
+      super("Got invalid magic value '#{value}'. Expected #{ArrPM::V2::Header::MAGIC}.")
+    end
+  end
+
   class EmptyFile < Base; end
   class ShortFile < Base; end
   class InvalidVersion < Base; end
