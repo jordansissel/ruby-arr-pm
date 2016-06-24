@@ -8,6 +8,8 @@ class ArrPM::V2::Lead
   LENGTH = 96
   MAGIC = [ 0xed, 0xab, 0xee, 0xdb ]
   MAGIC_LENGTH = MAGIC.count
+
+  SIGNED_TYPE = 5
   
   attr_accessor :major, :minor, :type, :architecture, :name, :os, :signature_type, :reserved
 
@@ -46,6 +48,10 @@ class ArrPM::V2::Lead
     @signature_type = self.class.parse_signature_type(data)
     @reserved = self.class.parse_reserved(data)
     self
+  end
+  
+  def signature?
+    @signature_type == SIGNED_TYPE
   end
 
   def self.valid_version?(version)

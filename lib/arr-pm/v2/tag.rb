@@ -1,6 +1,6 @@
 require "arr-pm/namespace"
 
-module ArrPM::V2::Tag
+class ArrPM::V2::Tag
   module Type
     NULL = 0
     CHAR = 1
@@ -12,6 +12,34 @@ module ArrPM::V2::Tag
     BINARY = 7
     STRING_ARRAY = 8
     I18NSTRING = 9
+
+    TYPE_MAP = Hash[constants.collect { |c| [const_get(c), c] }]
+
+    def self.parse(data, type, offset, count)
+      case type
+        when NULL
+          nil
+        when CHAR
+          data[offset, count].unpack("A#{count}")
+        when INT8
+          data[offset, count].unpack("C" * count)
+        when INT16
+          data[offset, 2 * count].unpack("n" * count)
+        when INT32
+          data[offset, 4 * count].unpack("N" * count)
+        when INT64
+          a, b = data[offset, 8].unpack("NN")
+          a << 32 + b
+        when STRING, I18NSTRING
+          data[offset..-1][/^[^\0]*/]
+        when BINARY
+          data[offset, count]
+        when STRING_ARRAY
+          data[offset..-1].split("\0")[0...count]
+        else
+          raise ArrPM::V2::Error::InvalidType, type
+      end
+    end
   end # module Type
 
   HEADERIMAGE = 61
@@ -245,4 +273,23 @@ module ArrPM::V2::Tag
   HEADERCOLOR = 5017
   VERBOSE = 5018
   EPOCHNUM = 5019
+  ENCODING = 5062
+
+  TAG_MAP = Hash[constants.collect { |c| [const_get(c), c] }]
+
+  attr_accessor :tag, :type, :value
+
+  def initialize(tag_number, type_number)
+    @tag = self.class::TAG_MAP[tag_number] || tag_number
+    @type = type_number
+  end
+
+  def parse(data, offset, count)
+    @value = Type.parse(data, @type, offset, count)
+    nil
+  end
+
+  def inspect
+    format("<%s#%s> %s/%d value=%s>", self.class.name, self.object_id, @tag, @type, @value.inspect)
+  end
 end # module ArrPM::V2::Tag

@@ -14,7 +14,7 @@ module ArrPM::V2::Error
 
   class InvalidHeaderMagicValue < Base
     def initialize(value)
-      super("Got invalid magic value '#{value}'. Expected #{ArrPM::V2::Header::MAGIC}.")
+      super("Got invalid magic value '#{value}'. Expected #{ArrPM::V2::HeaderHeader::MAGIC}.")
     end
   end
 
