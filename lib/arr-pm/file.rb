@@ -206,10 +206,19 @@ class RPM::File
     end
     payload_fd = payload.clone
     output = ""
+    data = nil
     loop do
-      data = payload_fd.read(16384, buffer)
+      data = payload_fd.read(16384, buffer) if data.nil? || data.bytesize == 0
       break if data.nil? # listerextractor.write(data)
-      lister.write(data)
+      begin
+        total_written = 0
+        while total_written < data.bytesize do
+          total_written = lister.write_nonblock(data) 
+          data = data[total_written..-1]
+        end 
+      rescue Errno::EAGAIN
+        #Nothing to do atm
+      end
 
       # Read output from the pipe.
       begin
