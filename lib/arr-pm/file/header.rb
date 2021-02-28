@@ -12,16 +12,8 @@ class RPM::File::Header
   attr_accessor :data_length  # rpmlib calls this field 'dl' unhelpfully
 
   HEADER_SIGNED_TYPE = 5
-  
-  if RUBY_VERSION =~ /^2\./
-    # Ruby 2 forces all strings to be UTF-8, so "\x01" becomes "\u0001"
-    # which is two bytes 00 01 which is not what we want. I can't find
-    # a sane way to create a string without this madness in Ruby 2,
-    # so let's just pack two 4-byte integers and go about our day.
-    HEADER_MAGIC = [0x8eade801, 0x00000000].pack("NN")
-  else
-    HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00"
-  end
+  HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00".force_encoding("BINARY")
+
   # magic + index_count + data_length
   HEADER_HEADER_LENGTH = HEADER_MAGIC.length + 4 + 4
   TAG_ENTRY_SIZE = 16 # tag id, type, offset, count == 16 bytes
