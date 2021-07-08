@@ -57,7 +57,8 @@ class RPM::File
       # signature headers are padded up to an 8-byte boundar, details here:
       # http://rpm.org/gitweb?p=rpm.git;a=blob;f=lib/signature.c;h=63e59c00f255a538e48cbc8b0cf3b9bd4a4dbd56;hb=HEAD#l204
       # Throw away the pad.
-      @file.read(@signature.length % 8)
+      @padding_length = (8 - (@signature.length % 8)) % 8
+      @file.read(@padding_length)
     end
 
     return @signature
@@ -84,7 +85,7 @@ class RPM::File
       # 8-byte boundary-rounding.
     end
 
-    @payload.seek(@lead.length + @signature.length + @signature.length % 8 + @header.length, IO::SEEK_SET)
+    @payload.seek(@lead.length + @signature.length + @padding_length + @header.length, IO::SEEK_SET)
     return @payload
   end # def payload
 
