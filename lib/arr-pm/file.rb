@@ -195,49 +195,12 @@ class RPM::File
   # 
   #   % rpm2cpio blah.rpm | cpio -it
   def files
-    return @files unless @files.nil?
-
-    lister = IO.popen("#{tags[:payloadcompressor]} -d | cpio -it --quiet", "r+")
-    buffer = ""
-    begin
-        buffer.force_encoding("BINARY")
-    rescue NoMethodError
-        # Do Nothing
-    end
-    payload_fd = payload.clone
-    output = ""
-    loop do
-      data = payload_fd.read(16384, buffer)
-      break if data.nil? # listerextractor.write(data)
-      lister.write(data)
-
-      # Read output from the pipe.
-      begin
-        output << lister.read_nonblock(16384)
-      rescue Errno::EAGAIN
-        # Nothing to read, move on!
-      end
-    end
-    lister.close_write
-
-    # Read remaining output
-    begin
-      output << lister.read
-    rescue Errno::EAGAIN
-      # Because read_nonblock enables NONBLOCK the 'lister' fd,
-      # and we may have invoked a read *before* cpio has started
-      # writing, let's keep retrying this read until we get an EOF
-      retry
-    rescue EOFError
-      # At EOF, hurray! We're done reading.
-    end
-
-    # Split output by newline and strip leading "."
-    @files = output.split("\n").collect { |s| s.gsub(/^\./, "") }
-    return @files
-  ensure
-    lister.close unless lister.nil?
-    payload_fd.close unless payload_fd.nil?
+    # RPM stores the file metadata split across multiple tags.
+    # A single path's filename (with no directories) is stored in the "basename" tag.
+    # The directory a file lives in is stored in the "dirnames" tag
+    #
+    # We can join each entry of dirnames and basenames to make the full filename.
+    return tags[:dirnames].zip(tags[:basenames]).map &File.method(:join)
   end # def files
 
   def mask?(value, mask)
