@@ -9,7 +9,6 @@ Gem::Specification.new do |spec|
     "on all systems"
   spec.license = "Apache 2"
 
-  spec.add_dependency "cabin", ">0" # for logging. apache 2 license
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
