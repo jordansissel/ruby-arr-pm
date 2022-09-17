@@ -1,8 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "namespace"))
-require "cabin"
 
 class RPM::File::Lead
-  include Cabin::Inspectable
 
   #struct rpmlead {
   attr_accessor :magic #unsigned char magic[4];
