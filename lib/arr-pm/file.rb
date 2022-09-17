@@ -211,9 +211,10 @@ class RPM::File
     # RPM stores the file metadata split across multiple tags.
     # A single path's filename (with no directories) is stored in the "basename" tag.
     # The directory a file lives in is stored in the "dirnames" tag
+    # We can find out what directory a file is in using the "dirindexes" tag.
     #
     # We can join each entry of dirnames and basenames to make the full filename.
-    return tags[:dirnames].zip(tags[:basenames]).map &File.method(:join)
+    return tags[:basenames].zip(tags[:dirindexes]).map { |name, i| File.join(tags[:dirnames][i], name) }
   end # def files
 
   def mask?(value, mask)
