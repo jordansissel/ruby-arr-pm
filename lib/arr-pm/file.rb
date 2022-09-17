@@ -88,6 +88,14 @@ class RPM::File
     return @payload
   end # def payload
 
+  def valid_compressor?(name)
+    # I scanned rpm's rpmio.c for payload implementation names and found the following.
+    #    sed -rne '/struct FDIO_s \w+ *= *\{/{ n; s/^.*"(\w+)",$/\1/p }' rpmio/rpmio.c
+    # It's possible this misses some supported rpm payload compressors.
+
+    [ "gzip", "bzip2", "xz", "lzma", "zstd" ].include?(name)
+  end
+
   # Extract this RPM to a target directory.
   #
   # This should have roughly the same effect as:
@@ -97,8 +105,13 @@ class RPM::File
     if !File.directory?(target)
       raise Errno::ENOENT.new(target)
     end
+
+    compressor = tags[:payloadcompressor]
+    if !valid_compressor?(compressor)
+      raise "Cannot decompress. This RPM uses an invalid compressor '#{compressor}'"
+    end
     
-    extractor = IO.popen("#{tags[:payloadcompressor]} -d | (cd #{target}; cpio -i --quiet --make-directories)", "w")
+    extractor = IO.popen("#{compressor} -d | (cd #{target}; cpio -i --quiet --make-directories)", "w")
     buffer = ""
     begin
         buffer.force_encoding("BINARY")
