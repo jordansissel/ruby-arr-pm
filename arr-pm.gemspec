@@ -19,6 +19,8 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "flores", ">0"
   spec.add_development_dependency "rspec", ">3.0.0"
+  spec.add_development_dependency "stud", ">=0.0.23"
+  spec.add_development_dependency "insist", ">=1.0.0"
   #spec.homepage = "..."
 end
 
