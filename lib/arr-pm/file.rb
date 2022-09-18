@@ -3,6 +3,7 @@ require File.join(File.dirname(__FILE__), "file", "header")
 require File.join(File.dirname(__FILE__), "file", "lead")
 require File.join(File.dirname(__FILE__), "file", "tag")
 require "fcntl"
+require "shellwords"
 
 # Much of the code here is derived from knowledge gained by reading the rpm
 # source code, but mostly it started making more sense after reading this site:
@@ -111,7 +112,7 @@ class RPM::File
       raise "Cannot decompress. This RPM uses an invalid compressor '#{compressor}'"
     end
     
-    extractor = IO.popen("#{compressor} -d | (cd #{target}; cpio -i --quiet --make-directories)", "w")
+    extractor = IO.popen("#{compressor} -d | (cd #{Shellwords.escape(target)}; cpio -i --quiet --make-directories)", "w")
     buffer = ""
     begin
         buffer.force_encoding("BINARY")
